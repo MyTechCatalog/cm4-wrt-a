@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+# Script for starting the Raspberry Pi Pico Monitoring Service 
+# root@OpenWrt:/# /etc/init.d/picod enable
+# root@OpenWrt:/# /etc/init.d/picod disable
+ 
+START=10
+ 
+start() {
+        
+    (/usr/bin/picod -c /etc/picod.conf > /dev/null 2>&1) &
+}         
+
+stop() {
+    pkill picod
+}
