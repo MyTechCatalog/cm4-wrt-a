@@ -4,11 +4,11 @@ Currently sold on Amazon: https://www.amazon.com/dp/B0C17SX8QG
 
 The repository is organized as follows:
 
-| Directory | Description                                                                                       |
-| ----------|---------------------------------------------------------------------------------------------------|
-| [CM4]     | Source code for picod: An OpenWrt service for communicating with the Raspberry Pi Pico            |
-| [pico]    | Firmware for the Raspberry Pi Pico microcontroller                                                |
-| [case]    | STL files for a 3D printed case for the CM4-WRT-A                                                 |
+| Directory   | Description                                                                                       |
+| ------------|---------------------------------------------------------------------------------------------------|
+| [CM4](CM4)  | Source code for picod: An OpenWrt service for communicating with the Raspberry Pi Pico            |
+| [pico](pico)| Firmware for the Raspberry Pi Pico microcontroller                                                |
+| [case](case)| STL files for a 3D printed case for the CM4-WRT-A                                                 |
 
 # Documentation
 Overview of the CM4-WRT-A: https://www.mytechcatalog.com/CM4-WRT-A-Raspberry-Pi-CM4-Router-Baseboard-With-NVME-Support
