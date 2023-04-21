@@ -1,6 +1,6 @@
 # CM4-WRT-A
 This repository contains the source code for the software and firmware necessary to utilize the custom features of the CM4-WRT-A: A Raspberry Pi CM4 Router Baseboard with NVME support. 
-Currently sold on Amazon: https://www.amazon.com/dp/B0C17SX8QG
+Currently sold on Amazon: https://www.amazon.com/dp/B0C17SX8QG and Tindie: https://www.tindie.com/products/mytechcatalog/rpi-cm4-router-baseboard-with-nvme/
 
 The repository is organized as follows:
 
