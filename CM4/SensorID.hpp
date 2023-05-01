@@ -8,6 +8,7 @@ namespace picod {
         Mdot2_Socket_M_J2,
         RPi_Pico,
         System_FAN_J17,
+        CM4_FAN_J18,
         Under_CM4_SOC,
         NUM_SENSOR_IDs
     };

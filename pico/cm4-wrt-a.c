@@ -70,10 +70,10 @@ static inline void blink_led(uint gpio, uint numTimes) {
 
 // GPIO interrupt handler
 void gpio_isr_callback(uint gpio, uint32_t events) {
-    if (gpio == FAN1_TACHO_GPIO) {
-        update_tachometer_counter(events);
-    } else if (gpio == SHUTDOWN_REQUEST_GPIO){
+    if (gpio == SHUTDOWN_REQUEST_GPIO) {
         detect_shutdown_events(events);
+    } else {
+        update_tachometer_counter(gpio, events);
     }
 }
 
@@ -159,8 +159,10 @@ static inline void init_board() {
     SET_PIN_DIR(CM4_BOOT_GPIO, GPIO_OUT)
     SET_PIN_DIR(CM4_EN_GPIO, GPIO_OUT)
     SET_PIN_DIR(FAN1_TACHO_GPIO, GPIO_IN)
+    SET_PIN_DIR(CM4_FAN_TACHO_GPIO, GPIO_IN)
     SET_PIN_DIR(SHUTDOWN_REQUEST_GPIO, GPIO_IN)
     gpio_pull_up(FAN1_TACHO_GPIO);
+    gpio_pull_up(CM4_FAN_TACHO_GPIO);
         
 
     // Turn off Pico LEDs
@@ -209,8 +211,11 @@ static inline void init_board() {
     // Setup interrupt handler to count FAN1's revolutions
     gpio_set_irq_enabled_with_callback(FAN1_TACHO_GPIO, 
         GPIO_IRQ_EDGE_RISE, true, &gpio_isr_callback);
+
+    gpio_set_irq_enabled_with_callback(CM4_FAN_TACHO_GPIO, 
+        GPIO_IRQ_EDGE_RISE, true, &gpio_isr_callback);
     
-    init_fan_pwm(FAN1_PWM_GPIO);    
+    init_fan_pwm();    
 }
 
 static inline bool is_CM4_USB_boot_mode_enabled() {    

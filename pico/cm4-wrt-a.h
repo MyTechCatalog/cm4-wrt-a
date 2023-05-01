@@ -48,6 +48,12 @@
 // Main system fan's PWM pin
 #define FAN1_PWM_GPIO 8 // GPIO8
 
+// CM4 fan tachometer pin
+#define CM4_FAN_TACHO_GPIO 11 // GPIO11
+
+// CM4 fan PWM pin
+#define CM4_FAN_PWM_GPIO 10 // GPIO10
+
 // Input pin connected to shutdown button
 // Pin 3 on jumper with reference J16
 #define SHUTDOWN_REQUEST_GPIO 7 // GPIO7

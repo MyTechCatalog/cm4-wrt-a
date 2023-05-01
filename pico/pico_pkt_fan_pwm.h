@@ -11,6 +11,7 @@
 #include "pico/stdlib.h"
 #else
 #include <stdint.h>
+#include <vector>
 #endif
 
 #include "pico_pkt_id.h"
@@ -74,19 +75,19 @@ extern "C" {
 
 #define FAN_PWM_LSB 100.0f
 
-#define PACK_FAN_PWM(temp_val,idx)\
-    buf[idx]     = (uint8_t)(temp_val * FAN_PWM_LSB);\
+#define PACK_FAN_PWM(temp_val,offset)\
+    buf[PICO_PKT_FAN_PWM_IDX_BASE + offset]     = (uint8_t)(temp_val * FAN_PWM_LSB);\
 
-#define UNPACK_FAN_PWM(data,idx)\
-    data = (float)buf[idx];\
+#define UNPACK_FAN_PWM(data,offset)\
+    data = (float)buf[PICO_PKT_FAN_PWM_IDX_BASE + offset];\
     data /= FAN_PWM_LSB;\
 
 /* Request packet indices */
 #define PICO_PKT_FAN_PWM_IDX_MAGIC      0
 #define PICO_PKT_FAN_PWM_IDX_TARGET_ID  1
 #define PICO_PKT_FAN_PWM_IDX_FLAGS      2
-#define PICO_PKT_FAN_PWM_IDX_FAN1       3 /* FAN1 PWM value 0 to 100 (%) */
-#define PICO_PKT_FAN_PWM_RESV           4
+#define PICO_PKT_FAN_PWM_IDX_BASE       3 /* Base address of FAN PWM data */
+#define PICO_PKT_FAN_PWM_RESV           5
 
 /* Flag bits */
 #define PICO_PKT_FAN_PWM_FLAG_WRITE     (1 << 0)
@@ -101,33 +102,101 @@ extern "C" {
 // Period of timer used to calculate FAN speed
 #define TACHO_TIMER_DELAY_ms 1000
 #define REVS_PER_MSEC_TO_RPM 60
+#define NUM_PWM_FANS 2
+
+enum pwm_fan_id {
+    SYS_FAN1 = 1,
+    CM4_FAN  = 2,
+    INVALID_FAN_ID
+};
+
+#ifdef PICO_BOARD
+typedef struct pwm_fan_t {
+    /// @brief Fan Identifier
+    uint8_t fan_id;
+
+    /// @brief Fan's tachometer GPIO pin
+    volatile uint tacho_gpio;
+
+    /// @brief Fan's PWM GPIO pin
+    uint pwm_gpio;
+
+    /// @brief Tachometer interrupt Count
+    volatile uint64_t tacho_cnt;
+    
+    /// @brief Prevoius tachometer interrupt Count
+    uint64_t prev_tacho_cnt;
+
+    /// @brief Fan Revolutions Per Minute (RPM)
+    uint16_t rpm;
+
+    /// @brief FAN1 Pulse Width Modulation (PWM) duty cycle. 
+    /// Range: 0.0(0%) to 1.0f(100%)
+    float duty_cycle;
+
+} pwm_fan_t;
+#endif
+
+typedef struct pico_pkt_fan_pwm_t {
+    /// @brief Fan Identifier
+    uint8_t fan_id;
+
+    /// @brief Pulse Width Modulation (PWM) setting [0.0 to 1.0]
+    float pwm_pct;    
+} pico_pkt_fan_pwm_t;
 
 // Packet handler
 void pkt_fan_pwm(struct pkt_buf *b);
+uint16_t get_fan_rpm(uint8_t fan_id);
 
 #ifdef PICO_BOARD
-void init_fan_pwm(uint gpio);
+void init_fan_pwm();
 // Called by GPIO ISR to update tachometer counter(s)
-void update_tachometer_counter(uint32_t events);
+void update_tachometer_counter(uint gpio, uint32_t events);
 #endif
+
+inline bool is_valid_pico_fan_id(uint8_t fan_id) {
+    bool ret_val = false;
+
+    switch (fan_id)
+    {
+    case SYS_FAN1:
+    case CM4_FAN:
+        ret_val = true;
+        break;    
+    default:
+        break;
+    }
+
+    return ret_val;
+}
 
 /* Pack the request buffer */
 /// @brief Packs FAN PWM read/write request
-/// @param fan_id Number 1 to N to indicating target fan
-/// @param write True for Write, False to Read operation
-/// @param pwm_pct PWM value (0 to 100)
+/// @param buf request buffer
+/// @param fan fan struct array
+/// @param write True (1) for Write, False (0) to Read operation
 static inline void pico_pkt_fan_pwm_req_pack(uint8_t *buf, 
-    uint8_t fan_id, bool write, float pwm_pct)
+    struct pico_pkt_fan_pwm_t fan[NUM_PWM_FANS], bool write)
 {    
-    buf[PICO_PKT_FAN_PWM_IDX_MAGIC] = PICO_PKT_FAN_PWM_MAGIC;
-    buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] = 1 << (fan_id-1);
+    buf[PICO_PKT_FAN_PWM_IDX_MAGIC]     = PICO_PKT_FAN_PWM_MAGIC;
+    buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] = 0x00;
     
-    if (write) {
-        PACK_FAN_PWM(pwm_pct, PICO_PKT_FAN_PWM_IDX_FAN1)
+    for (size_t i = 0; i < NUM_PWM_FANS; i++) {
+        if (!is_valid_pico_fan_id(fan[i].fan_id) || (fan[i].fan_id < 1)) {
+            continue;
+        }
+
+        buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] |= (1 << (fan[i].fan_id - 1));
+        uint8_t fan_idx = (fan[i].fan_id - 1);        
+
+        PACK_FAN_PWM(fan[i].pwm_pct, fan_idx)
+    }
+    
+    if (write) {        
         buf[PICO_PKT_FAN_PWM_IDX_FLAGS] = PICO_PKT_FAN_PWM_FLAG_WRITE;
     } else {
-        buf[PICO_PKT_FAN_PWM_IDX_FLAGS] = 0x00;
-        buf[PICO_PKT_FAN_PWM_IDX_FAN1]      = 0x00;
+        buf[PICO_PKT_FAN_PWM_IDX_FLAGS] = 0x00;        
     }
 
     for (int i = PICO_PKT_FAN_PWM_RESV; i < PICO_PKT_LEN; i++) {
@@ -137,12 +206,22 @@ static inline void pico_pkt_fan_pwm_req_pack(uint8_t *buf,
 
 /* Pack the response buffer */
 static inline void pico_pkt_fan_pwm_resp_pack(uint8_t *buf, 
-    uint8_t fan_id, bool write, float pwm_pct, bool success)
+    struct pico_pkt_fan_pwm_t fan[NUM_PWM_FANS], bool write, bool success)
 {    
     buf[PICO_PKT_FAN_PWM_IDX_MAGIC]     = PICO_PKT_FAN_PWM_MAGIC;
-    buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] = 1 << (fan_id-1);    
-    PACK_FAN_PWM(pwm_pct, PICO_PKT_FAN_PWM_IDX_FAN1)
-    
+    buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] = 0x00;
+
+    for (size_t i = 0; i < NUM_PWM_FANS; i++) {
+        if (!is_valid_pico_fan_id(fan[i].fan_id) || (fan[i].fan_id < 1)) {
+            PACK_FAN_PWM(fan[i].pwm_pct, i)
+            continue;
+        }
+        
+        buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] |= 1 << (fan[i].fan_id - 1);
+        uint8_t fan_idx = (fan[i].fan_id - 1);
+        PACK_FAN_PWM(fan[i].pwm_pct, fan_idx)
+    }
+        
     if (write) {
         buf[PICO_PKT_FAN_PWM_IDX_FLAGS] = PICO_PKT_FAN_PWM_FLAG_WRITE;
     } else {
@@ -162,23 +241,18 @@ static inline void pico_pkt_fan_pwm_resp_pack(uint8_t *buf,
 
 /* Unpack the response buffer */
 static inline void pico_pkt_fan_pwm_unpack(const uint8_t *buf, 
-    uint8_t *fan_id, bool *write, float *pwm_pct, bool *success)
+    struct pico_pkt_fan_pwm_t fan[NUM_PWM_FANS], bool *write, bool *success)
 {   
-    if (fan_id != NULL) {
-        for (uint8_t i = 0; i < 8; i++) {
-            if( (buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] & (1 << i)) != 0) {
-                *fan_id = (i+1);
-                break; // Only one FAN is present for now
-            }
+    for (size_t i = 0; i < NUM_PWM_FANS; i++) {
+        if( (buf[PICO_PKT_FAN_PWM_IDX_TARGET_ID] & (1 << i)) != 0) {
+            fan[i].fan_id = (i+1);           
         }
+          
+        UNPACK_FAN_PWM(fan[i].pwm_pct, i)
     }
-
+    
     if (write != NULL) {
         *write = ((buf[PICO_PKT_FAN_PWM_IDX_FLAGS] & PICO_PKT_FAN_PWM_FLAG_WRITE) != 0);
-    }
-
-    if (pwm_pct != NULL) {
-        UNPACK_FAN_PWM(*pwm_pct, PICO_PKT_FAN_PWM_IDX_FAN1)
     }
     
     if (success != NULL) {
@@ -196,13 +270,15 @@ static inline void pico_pkt_fan_pwm_unpack(const uint8_t *buf,
 /// @param fd Pico serial file descriptor
 void init_fan_pwm(int fd);
 
+/// @brief Helper function to return RPi Pico PWM FAN ID given its name.
+uint8_t get_fan_id_from_name(char * fan_name);
+
 /// @brief Sends a request to the Pico to read/write FAN PWM setting
 /// @param fd Pico serial file descriptor
 /// @param rw_flag Read(0)/Write(1) flag
-/// @param fan_id Identifier of FAN.
-/// @param pwm_pct Pulse Width Modulation (PWM) setting [0.0 to 1.0]
+/// @param fanInfo Fan info.
 /// @return True(1) on success. False(0) on failure.
-bool send_fan_pwm_request(int fd, bool rw_flag, uint8_t fan_id, float & pwm_pct);
+bool send_fan_pwm_request(int fd, bool rw_flag, std::vector<struct pico_pkt_fan_pwm_t> &fanInfo);
 #endif
 
 #ifdef __cplusplus

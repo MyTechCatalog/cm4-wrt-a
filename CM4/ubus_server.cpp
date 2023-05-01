@@ -33,8 +33,9 @@ namespace picod
         __WATCHDOG_MAX
     };
 
-    enum {        
-        FAN_PWM_PERCENT,
+    enum {
+        FAN_NAME,
+        FAN_PWM_PERCENT,        
         __FAN_PWM_MAX
     };
 
@@ -44,7 +45,8 @@ namespace picod
         [WATCHDOG_MAX_RETRIES] = {.name = "max_retries", .type = BLOBMSG_TYPE_INT32},
     };
 
-    const struct blobmsg_policy fan_pwm_policy[] = {        
+    const struct blobmsg_policy fan_pwm_policy[] = {
+        [FAN_NAME] = {.name = "fan_name", .type = BLOBMSG_TYPE_STRING},     
         [FAN_PWM_PERCENT] = {.name = "fan_pwm_pct", .type = BLOBMSG_TYPE_INT32}
     };
 
@@ -81,6 +83,7 @@ namespace picod
     struct blob_buf watchdog_blob;
     struct blob_buf temperature_blob;
     struct blob_buf tachometer_blob;
+    struct blob_buf pwm_blob;
     std::string picoVersion;
 
     void put_container(struct blob_buf *buf, struct blob_attr *attr, const char *name) {
@@ -94,7 +97,7 @@ namespace picod
         //fprintf(stderr, "Subscribers active: %d\n", obj->has_subscribers);
     }
 
-    void procd_bcast_event(char *event, struct blob_attr *msg) {
+    void picod_bcast_event(char *event, struct blob_attr *msg) {
         int ret;
 
         if (!notify)
@@ -124,12 +127,24 @@ namespace picod
         struct ubus_request_data *req, const char *method, struct blob_attr *msg) {
 
         blob_buf_init(&b, 0);
-        uint8_t fan_id = 1;
-        bool rw_flag = false; // Read(0)/Write(1) flag
-        float pwm_pct = 0.0f;
+        
+        bool rw_flag = false; // Read(0)/Write(1) flag        
+        std::vector<struct pico_pkt_fan_pwm_t> fanInfo;
+        fanInfo.emplace_back(pico_pkt_fan_pwm_t { 
+            .fan_id = SYS_FAN1, .pwm_pct = 0.0f });
+        fanInfo.emplace_back(pico_pkt_fan_pwm_t { 
+            .fan_id = CM4_FAN, .pwm_pct = 0.0f });
 
-        if (send_fan_pwm_request(pico_fd, rw_flag, fan_id, pwm_pct)) {
-            blobmsg_add_u32(&b, fan_pwm_policy[FAN_PWM_PERCENT].name, (int)(pwm_pct*100));
+        if (send_fan_pwm_request(pico_fd, rw_flag, fanInfo)) {
+            blob_buf_init(&pwm_blob, 0);
+            
+            blobmsg_add_u32(&pwm_blob,
+                appSettings.sensorIds[picod::System_FAN_J17].c_str(), (int)(fanInfo[SYS_FAN1-1].pwm_pct*100));
+            
+            blobmsg_add_u32(&pwm_blob,
+                appSettings.sensorIds[picod::CM4_FAN_J18].c_str(), (int)(fanInfo[CM4_FAN-1].pwm_pct*100));
+            
+            put_container(&b, pwm_blob.head, fan_pwm_policy[FAN_PWM_PERCENT].name);           
         }
         
         pico_pkt_watchdog_t s = {0};
@@ -167,7 +182,9 @@ namespace picod
                 }
 
                 blobmsg_add_u32(&tachometer_blob,
-                    appSettings.sensorIds[picod::System_FAN_J17].c_str(), t.s.fan1rpm);                
+                    appSettings.sensorIds[picod::System_FAN_J17].c_str(), t.s.fan1rpm);
+                blobmsg_add_u32(&tachometer_blob,
+                    appSettings.sensorIds[picod::CM4_FAN_J18].c_str(), t.s.cm4_fan_rpm);
             }
             put_container(&b, temperature_blob.head, UBUS_EVENT_TEMPERATURE);
             put_container(&b, tachometer_blob.head, UBUS_EVENT_TACHOMETER);
@@ -227,14 +244,17 @@ namespace picod
 
                 blobmsg_add_u32(&tachometer_blob,
                     appSettings.sensorIds[picod::System_FAN_J17].c_str(), t.s.fan1rpm);
+                
+                blobmsg_add_u32(&tachometer_blob,
+                    appSettings.sensorIds[picod::CM4_FAN_J18].c_str(), t.s.cm4_fan_rpm);
 
                 if (appSettings.enable_influx_db) {
                     picod::InfluxDB::instance().publish();
                 }              
             }
 
-            procd_bcast_event((char*)UBUS_EVENT_TEMPERATURE, temperature_blob.head);
-            procd_bcast_event((char*)UBUS_EVENT_TACHOMETER, tachometer_blob.head);            
+            picod_bcast_event((char*)UBUS_EVENT_TEMPERATURE, temperature_blob.head);
+            picod_bcast_event((char*)UBUS_EVENT_TACHOMETER, tachometer_blob.head);            
         }
         
         uloop_timeout_set(&notify_temperature_timer, 
@@ -276,17 +296,34 @@ namespace picod
         struct blob_attr *tb[__FAN_PWM_MAX];
 
         blobmsg_parse(fan_pwm_policy, __FAN_PWM_MAX, tb, blob_data(msg), blob_len(msg));
-        if (!tb[FAN_PWM_PERCENT]) {
+        if (!tb[FAN_NAME]) {
             return UBUS_STATUS_INVALID_ARGUMENT;
         }
         
-        uint32_t fan_pwm_pct = blobmsg_get_u32(tb[FAN_PWM_PERCENT]);
+        char * fan_name = blobmsg_get_string(tb[FAN_NAME]);
+        uint32_t fan_pwm_pct = 0;
+        bool rw_flag = false;
+
+        if (tb[FAN_PWM_PERCENT]) {
+            rw_flag = true;
+            fan_pwm_pct = blobmsg_get_u32(tb[FAN_PWM_PERCENT]);
+        }
+        
         fan_pwm_pct = fan_pwm_pct > 100 ? 100 : fan_pwm_pct;
         float fan_pwm =  static_cast<float>(fan_pwm_pct)/FAN_PWM_LSB;
+        uint8_t fan_id = get_fan_id_from_name(fan_name);
 
-        if (send_fan_pwm_request(pico_fd, true, 1, fan_pwm)) {
+        if (fan_id ==  INVALID_FAN_ID) {
+            return UBUS_STATUS_INVALID_ARGUMENT;
+        }        
+        
+        std::vector<struct pico_pkt_fan_pwm_t> fanInfo;
+        fanInfo.emplace_back(pico_pkt_fan_pwm_t { 
+                .fan_id = static_cast<uint8_t>(fan_id), .pwm_pct = fan_pwm });
+
+        if (send_fan_pwm_request(pico_fd, rw_flag, fanInfo)) {
             blob_buf_init(&b, 0);
-            blobmsg_add_u32(&b, blobmsg_name(tb[FAN_PWM_PERCENT]), (int)(fan_pwm*100));
+            blobmsg_add_u32(&b, fan_pwm_policy[FAN_PWM_PERCENT].name, (int)(fanInfo[0].pwm_pct*100));
             ubus_send_reply(ctx, req, b.head);
         } else {
             return UBUS_STATUS_UNKNOWN_ERROR;

@@ -10,6 +10,10 @@
 #include <string>
 #include <vector>
 
+#define SANITIZE_PWM_INPUT(pwm)\
+pwm = (pwm < 0.0f) ? 0.0f : pwm;\
+pwm = (pwm > 1.0f) ? 1.0f : pwm;
+
 namespace picod {
     typedef struct Settings
     {
@@ -40,8 +44,11 @@ namespace picod {
         /// @brief Enables polling of the TMP103 temperature sensor        
         bool enable_tmp103_sensor;
 
-        /// @brief Pulse Width Modulation (PWM) setting for the main system fan (FAN1)
+        /// @brief Pulse Width Modulation (PWM) setting for the main system fan (J17)
         float fan1_pwm;
+
+        /// @brief Pulse Width Modulation (PWM) setting for the CM4 fan (J18)
+        float cm4_fan_pwm;
 
         /// @brief Number of times after the first attempt to restart the CM4.
         uint16_t pico_watchdog_max_retries;
@@ -75,13 +82,14 @@ namespace picod {
             tmp103_i2c_device_path("/dev/i2c-1"),
             enable_tmp103_sensor(true),
             fan1_pwm(0.5f),
+            cm4_fan_pwm(0.5f),
             pico_watchdog_max_retries(0),
             enable_influx_db(false),
             influx_host("localhost"),
             influx_port(8086),
             sensorIds({"PCIe_Switch", "M.2_Socket_M_J5", 
-                "M.2_Socket_E_J3", "M.2_Socket_M_J2", 
-                "RPi_Pico", "System_FAN_J17", "Under_CM4_SOC"}){}
+                "M.2_Socket_E_J3", "M.2_Socket_M_J2", "RPi_Pico", 
+                "System_FAN_J17", "CM4_FAN_J18", "Under_CM4_SOC"}){}
 
         // Ensure reasonable limits
         void sanitize(){
@@ -90,9 +98,9 @@ namespace picod {
                 (temperature_poll_interval_seconds < min_poll_interval) ?
                 min_poll_interval : temperature_poll_interval_seconds;
 
-            fan1_pwm = (fan1_pwm < 0.0f) ? 0.0f : fan1_pwm;
-            fan1_pwm = (fan1_pwm > 1.0f) ? 1.0f : fan1_pwm;
-
+            SANITIZE_PWM_INPUT(fan1_pwm)
+            SANITIZE_PWM_INPUT(cm4_fan_pwm)
+            
             pico_watchdog_timeout_seconds = (pico_watchdog_timeout_seconds < 1) ? 
                 1 : pico_watchdog_timeout_seconds;
             pico_watchdog_timeout_seconds = (pico_watchdog_timeout_seconds > 0xFFFF) ? 

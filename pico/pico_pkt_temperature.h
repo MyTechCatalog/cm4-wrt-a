@@ -47,7 +47,7 @@ extern "C" {
  * +----------------+---------------------------------------------------------+
  * |      13:12     | 16-bit data, little-endian. FAN1 Speed (RPM)            |
  * +----------------+---------------------------------------------------------+
- * |      15:14     | Reserved. Set to 0.                                     |
+ * |      15:14     | 16-bit data, little-endian. CM4 FAN Speed (RPM)         |
  * +----------------+---------------------------------------------------------+
  *
  *                              Response
@@ -120,7 +120,7 @@ extern "C" {
 #define PICO_PKT_TEMPERATURE_IDX_NTC4       8 /* NTC thermistor 4 temperature in °C x 100 */
 #define PICO_PKT_TEMPERATURE_IDX_SELF       10 /* Pico onboard temperature sensor in °C x 100 */
 #define PICO_PKT_IDX_FAN1_SPEED             12 /* System FAN 1 speed in Revolutions Per Minute (RPM) */
-#define PICO_PKT_TEMPERATURE_RESV           14
+#define PICO_PKT_IDX_CM4_FAN_SPEED          14 /* CM4 FAN speed in Revolutions Per Minute (RPM) */
 
 /* Flag bits */
 #define PICO_PKT_TEMPERATURE_FLAG_SUCCESS   (1 << 0)
@@ -131,8 +131,7 @@ extern "C" {
     .exec           = pkt_temperature \
 }
 
-typedef union pico_pkt_temperature_u
-{
+typedef union pico_pkt_temperature_u {
     struct pico_pkt_temperature_t {
         float ntc1; // NTC thermistor 1 temperature in °C x 100
         float ntc2; // NTC thermistor 1 temperature in °C x 100
@@ -140,16 +139,12 @@ typedef union pico_pkt_temperature_u
         float ntc4; // NTC thermistor 1 temperature in °C x 100
         float pico; // Pico onboard temperature sensor in °C x 100
         uint32_t fan1rpm; // System FAN 1 speed in Revolutions Per Minute (RPM)
+        uint32_t cm4_fan_rpm; // CM4 FAN speed in Revolutions Per Minute (RPM)
     } s;
-    // Add two (2) for the Pico's onboard temperature sensor, and
-    // FAN 1 speed.
-    float data[NUM_NTC_SENSORS + 2];
+    // Add three (3) for the Pico's onboard temperature sensor,
+    // FAN 1 speed, and CM4 FAN speed.
+    float data[NUM_NTC_SENSORS + 3];
 } pico_pkt_temperature_u;
-
-
-
-// FAN1 revolutions per minute
-extern uint16_t fan1Tacho;
 
 // Packet handler
 void pkt_temperature(struct pkt_buf *b);
@@ -172,8 +167,8 @@ static inline void pico_pkt_temperature_req_pack(uint8_t *buf)
     buf[PICO_PKT_TEMPERATURE_IDX_SELF + 1] = 0x00;
     buf[PICO_PKT_IDX_FAN1_SPEED + 0]       = 0x00;
     buf[PICO_PKT_IDX_FAN1_SPEED + 1]       = 0x00;
-    buf[PICO_PKT_TEMPERATURE_RESV + 0]     = 0x00;
-    buf[PICO_PKT_TEMPERATURE_RESV + 1]     = 0x00;
+    buf[PICO_PKT_IDX_CM4_FAN_SPEED + 0]    = 0x00;
+    buf[PICO_PKT_IDX_CM4_FAN_SPEED + 1]    = 0x00;
 }
 
 /* Pack the response buffer */
@@ -189,10 +184,8 @@ static inline void pico_pkt_temperature_resp_pack(uint8_t *buf,
     PACK_TEMPERATURE(p->s.ntc4, PICO_PKT_TEMPERATURE_IDX_NTC4)
     PACK_TEMPERATURE(p->s.pico, PICO_PKT_TEMPERATURE_IDX_SELF)
     PACK_FAN_SPEED(p->s.fan1rpm, PICO_PKT_IDX_FAN1_SPEED)
-    
-    buf[PICO_PKT_TEMPERATURE_RESV + 0] = 0x00;
-    buf[PICO_PKT_TEMPERATURE_RESV + 1] = 0x00;
-
+    PACK_FAN_SPEED(p->s.cm4_fan_rpm, PICO_PKT_IDX_CM4_FAN_SPEED)
+   
     if (success) {
         buf[PICO_PKT_TEMPERATURE_IDX_FLAGS] |= PICO_PKT_TEMPERATURE_FLAG_SUCCESS;
     }
@@ -208,6 +201,7 @@ static inline void pico_pkt_temperature_resp_unpack(const uint8_t *buf,
     UNPACK_TEMPERATURE(p->s.ntc4, PICO_PKT_TEMPERATURE_IDX_NTC4)
     UNPACK_TEMPERATURE(p->s.pico, PICO_PKT_TEMPERATURE_IDX_SELF)
     UNPACK_FAN_SPEED(p->s.fan1rpm, PICO_PKT_IDX_FAN1_SPEED)
+    UNPACK_FAN_SPEED(p->s.cm4_fan_rpm, PICO_PKT_IDX_CM4_FAN_SPEED)
 
     if ((buf[PICO_PKT_TEMPERATURE_IDX_FLAGS] & PICO_PKT_TEMPERATURE_FLAG_SUCCESS) != 0) {
         *success = true;

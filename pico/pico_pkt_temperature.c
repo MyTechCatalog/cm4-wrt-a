@@ -7,6 +7,7 @@
 #include "thermistor.h"
 #include "pkt_handler.h"
 #include "pico_pkt_temperature.h"
+#include "pico_pkt_fan_pwm.h"
 #include "hardware/adc.h"
 #include "cm4-wrt-a.h"
 
@@ -69,7 +70,8 @@ void pkt_temperature(struct pkt_buf *b)
     }
 
     temp_data.s.pico = read_onboard_temperature();
-    temp_data.s.fan1rpm = fan1Tacho;
+    temp_data.s.fan1rpm = get_fan_rpm(SYS_FAN1);
+    temp_data.s.cm4_fan_rpm = get_fan_rpm(CM4_FAN);
    
     pico_pkt_temperature_resp_pack((uint8_t *)b->resp, &temp_data, success);
     // Write response to host (blocking)

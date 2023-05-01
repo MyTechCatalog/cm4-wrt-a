@@ -147,7 +147,7 @@ bool get_pico_response(int fd, pkt_buf &pkt, uint8_t pkt_id) {
     fd_set readfds; // file descriptor set    
     maxfd = fd + 1;  // maximum bit entry (fd) to test
 
-    bool success = true;
+    bool success = false;
 
     // clear the socket set 
     FD_ZERO(&readfds);
@@ -178,6 +178,8 @@ bool get_pico_response(int fd, pkt_buf &pkt, uint8_t pkt_id) {
         } else {
             success = true;
         }
+    } else {
+        print_err("select() timed out.\n");
     }
 
     return success;

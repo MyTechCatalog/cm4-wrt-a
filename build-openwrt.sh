@@ -8,7 +8,7 @@ git_url="https://git.openwrt.org/openwrt/openwrt.git"
 [ "x$1" == "x" ] && { branch=$(git ls-remote --tags ${git_url} 'refs/tags/v*' |\
 grep '[^\{\}]$' | tail -n 1 | awk '{print $2}' | cut -d'/' -f3); } ||\
 { branch="$1"; }
-echo -e "Using OpenWrt tag: \033[1;36m${branch}\033[0m"
+echo -e "Using OpenWrt: \033[1;36m${branch}\033[0m"
 CONTAINER_NAME=openwrt-build
 imageName="openwrt:${branch}"
 # $0 always point to the shell script name.
@@ -40,7 +40,7 @@ theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
 { printf "RUN chmod +x ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
 { docker build ${basePath}/ -f ${dockerFile} -t ${imageName}; } &&\
 { docker run -t -d --name ${CONTAINER_NAME} \
-    -v "${basePath}"/CM4/:/home/build/CM4:ro \
+    -v "${basePath}"/CM4/:/home/build/CM4 \
     -v "${basePath}"/pico/:/home/build/pico:ro \
     -v "${basePath}"/bin/:/home/build/openwrt/bin ${imageName}; } &&\
 { docker exec -it ${CONTAINER_NAME} bash -c "/home/build/build-openwrt.sh"; exit 0;}
@@ -51,5 +51,14 @@ theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
 [ "$( docker container inspect -f '{{.State.Running}}' ${CONTAINER_NAME} )" == "false" ] &&\
 { echo -e "Starting \033[1;36m${CONTAINER_NAME}\033[0m" && docker start -i ${CONTAINER_NAME}; exit 0; }
 
-# within the Docker container
+# Later on within the Docker container, you can rebuild the picod package
 #make package/picod/{clean,compile} -j$(nproc)
+
+# Change the OpenWrt configuration file
+#make menuconfig
+
+# Save the updated configuration file
+#./scripts/diffconfig.sh > ~/CM4/diffconfig
+
+# Rebuild the OpenWrt images
+#make -j$(nproc) defconfig download clean world
