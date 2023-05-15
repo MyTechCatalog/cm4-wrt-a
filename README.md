@@ -17,6 +17,8 @@ How to install OpenWRT on the CM4-WRT-A router: https://www.mytechcatalog.com/ho
 
 How to monitor the CM4-WRT-A board temperatures and fan speed (RPM) in InfluxDB: https://www.mytechcatalog.com/how-to-monitor-the-cm4-wrt-a-board-temperatures-and-fan-speed-in-influxdb
 
+[![Complimentary Video](https://img.youtube.com/vi/28v230jvPTA/maxresdefault.jpg)](https://www.youtube.com/watch?v=28v230jvPTA)
+
 ## Install Prerequisites
 The build scripts for the CM4-WRT-A rely on Docker. If you would like to build OpenWrt or the Raspberry Pi Pico firmware for the CM4-WRT-A, install Docker with these commands on the terminal in Ubuntu or Debian: See https://docs.docker.com/desktop/install/linux-install/ for further details.
 ```shell
