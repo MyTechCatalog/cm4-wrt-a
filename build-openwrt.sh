@@ -49,7 +49,8 @@ theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
 { docker exec -it ${CONTAINER_NAME} bash; exit 0; }
 
 [ "$( docker container inspect -f '{{.State.Running}}' ${CONTAINER_NAME} )" == "false" ] &&\
-{ echo -e "Starting \033[1;36m${CONTAINER_NAME}\033[0m" && docker start -i ${CONTAINER_NAME}; exit 0; }
+{ echo -e "Starting \033[1;36m${CONTAINER_NAME}\033[0m" && docker start ${CONTAINER_NAME}; } &&\
+{ docker exec -it ${CONTAINER_NAME} bash; exit 0; }
 
 # Later on within the Docker container, you can rebuild the picod package
 #make package/picod/{clean,compile} -j$(nproc)
