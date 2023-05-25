@@ -51,3 +51,9 @@ You can omit the OpenWrt release version in step 2 above (<b>v22.03.4</b>), and 
 
 ## Contact information
 Email: cm4-wrt-a@mytechcatalog.com
+
+## Donations
+Did this project help you? Consider making a donation:
+
+[![paypal](https://raw.githubusercontent.com/java-decompiler/jd-gui/master/src/website/img/btn_donate_usd.gif)](https://www.paypal.com/donate/?hosted_button_id=N33ZHPURT53JJ)
+
