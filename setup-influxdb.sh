@@ -29,6 +29,7 @@ theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
 { docker run -d -p 8086:8086 --name ${CONTAINER_NAME} \
       -v ${dataDir}:/var/lib/influxdb2 \
       -v ${configDir}:/etc/influxdb2 \
+      -e INFLUXDB_REPORTING_DISABLED=true \
       -e DOCKER_INFLUXDB_INIT_MODE=setup \
       -e DOCKER_INFLUXDB_INIT_USERNAME=${username} \
       -e DOCKER_INFLUXDB_INIT_PASSWORD=${pass} \
