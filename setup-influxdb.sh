@@ -2,7 +2,6 @@
 #
 # Script to setup InfluxDB 2.x for use with the CM4-WRT-A router baseboard.
 # Ref: https://hub.docker.com/_/influxdb 
-# CM4-WRT-A router baseboard: https://www.amazon.com/dp/B0C17SX8QG
 ################################################################################
 # $0 always point to the shell script name.
 basePath=$(realpath $(dirname "$0"))

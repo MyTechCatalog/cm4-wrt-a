@@ -70,7 +70,7 @@ int init_pico(int &fd) {
     int retVal  = EXIT_SUCCESS;
     int result = 0;    
         
-    // open the device to be non-blocking (read will return immediatly)
+    // open the device to be non-blocking (read will return immediately)
     fd = open(appSettings.pico_serial_device_path.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (fd < 0) {       
         print_err("Failed to open: %s, %s\n", 
