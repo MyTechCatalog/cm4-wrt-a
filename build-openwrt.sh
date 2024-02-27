@@ -2,7 +2,8 @@
 #
 # Build OpenWrt image for the the CM4-WRT-A baseboard. It also builds a service 
 # named picod, which is a tool for monitoring the Raspberry Pi Pico on the 
-# CM4-WRT-A baseboard: https://www.amazon.com/dp/B0C17SX8QG
+# CM4-WRT-A baseboard: 
+# https://www.tindie.com/products/mytechcatalog/rpi-cm4-router-baseboard-with-nvme/
 ################################################################################
 git_url="https://git.openwrt.org/openwrt/openwrt.git"
 [ "x$1" == "x" ] && { branch=$(git ls-remote --tags ${git_url} 'refs/tags/v*' |\

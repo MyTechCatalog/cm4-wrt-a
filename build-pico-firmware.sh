@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Build Raspberry Pi Pico firmware for the CM4-WRT-A baseboard: 
-# https://www.amazon.com/dp/B0C17SX8QG
+# https://www.tindie.com/products/mytechcatalog/rpi-cm4-router-baseboard-with-nvme/
 ################################################################################
 CONTAINER_NAME=pico-build
 imageName="pico-image"
