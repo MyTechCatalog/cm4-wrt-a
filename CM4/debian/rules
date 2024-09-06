@@ -1,0 +1,17 @@
+#!/usr/bin/make -f  
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+override_dh_shlibdeps:
+	true
+
+%:  
+	dh $@
+override_dh_auto_install:
+	install -D -m 0755 ./build/picod $$(pwd)/debian/picod/usr/bin/picod	
+	install -D -m 0755 ./build/pico-cli $$(pwd)/debian/picod/usr/bin/pico-cli
+	install -D -m 0655 ./picod.service $$(pwd)/debian/picod/etc/systemd/system/picod.service
+	install -D -m 0655 ./picod.conf $$(pwd)/debian/picod/etc/picod/picod.conf	
+	sed -i 's/ttyAMA1/ttyAMA3/g' $$(pwd)/debian/picod/etc/picod/picod.conf
+	cp -r ./website $$(pwd)/debian/picod/etc/picod/
+	chmod -R 0655 $$(pwd)/debian/picod/etc/picod/website

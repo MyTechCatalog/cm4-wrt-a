@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+        <!-- Inhibit cache -->
+        <meta http-equiv="Cache-Control" content="no-store" />
+        <meta charset="UTF-8">
+        <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
+        <title>CM4-WRT-A Board Monitor</title>
+        <style>
+            body {font-family: Arial, Helvetica, sans-serif;}
+        </style>
+        <link rel="stylesheet" href="/static/lib/jquery.modal.min.css" />
+        <link rel="stylesheet" href="/static/lib/jquery-ui-1.13.2/jquery-ui.min.css" />
+        <link rel="stylesheet" href="/static/styles/w3.css">
+        <link rel="stylesheet" href="/static/styles/w3-colors-highway.css">
+        <link rel="stylesheet" href="/static/styles/dark-mode.css">
+        <link rel="stylesheet" href="/static/styles/dashboard.css">
+        <link rel="stylesheet" href="/static/styles/spinner.css">
+        <script src="/static/lib/jquery-3.7.1.min.js"></script>
+        <script src="/static/lib/jquery-ui-1.13.2/jquery-ui.min.js"></script>
+        <script src="/static/lib/jquery.validate.min.js"></script>
+        <script src="/static/lib/jquery.modal.min.js"></script>       
+        <script src="/static/lib/plotly-2.26.0.min.js"></script>
+        <script src="/static/js/appstate.js"></script>
+        <script src="/static/js/dashboard.js"></script>
+    </head>    
+    <body>
+        {% block content %}
+        <div class="main-grid w3-margin">
+            <!-- Plot Panel -->
+            <section class="main-panel main-border plot-panel">
+                <div class="plot-grid">
+                    <div id="temperature-chart" class="chart"></div>
+                    <div id="fan-rpm-chart" class="chart"></div>
+                </div>            
+            </section>
+    
+            <!-- Control Panel -->
+            <section class="main-panel main-border control-panel">
+                <fieldset class="wide-panel">
+                    <legend class="w3-container">Watchdog</legend>
+                    <form id="watchdog-form" name="watchdog">
+                        <label class="w3-center-align">Timeout (s)
+                            <input id="watchdog-timeout" name="timeout_sec" class="w3-input w3-border w3-center" type="number" min="0" max="600" value="{{ watchdog.timeout_sec }}"> 
+                        </label>
+                        <label class="w3-center-align">Max Retries
+                            <input id="watchdog-max_retries" name="max_retries" class="w3-input w3-border w3-center" type="number" min="0" max="100" value="{{ watchdog.max_retries }}"> 
+                        </label>
+                        <label class="w3-center-align">Enable:
+                            <input class="w3-check" type="checkbox" name="is_enabled" id="watchdog-enable" title="Enable watchdog." {{ watchdog.is_enabled }} >
+                        </label>                                                
+                    </form>
+                </fieldset>
+    
+                <fieldset class="fan-pwm-panel">
+                    <legend class="w3-container">Fan PWM</legend>                
+                    <select id="fan-pwm-opt" title="Select a fan, and change its PWM setting." style="display:none"></select>
+                    <div class="fan-pwm-edit-panel">
+                        <label class="fan-pwm-edit">Value (%):
+                            <input class="w3-input w3-border w3-center" type="number" min="0" max="100" id="fan-pwm-input">
+                        </label>
+                    </div>               
+                </fieldset>
+                <div class="filler"></div>
+            </section>
+        </div>
+        
+        <div id="loader-parent" style="display:none">
+            <div class="lds-spinner" id="data-vis-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        </div>
+
+        <div class="w3-panel w3-highway-red w3-display-container" id="status-panel" style="display:none">
+            <span onclick="this.parentElement.style.display='none'"
+            class="w3-button w3-display-topright">X</span>
+            <h2 class="w3-text-white">Error</h2>
+            <p id="status-message">Click on the X to close this panel.</p>
+        </div>
+    
+        <script>
+            plot_default_chart('temperature-chart', 'Temperature');
+            plot_default_chart('fan-rpm-chart', 'Fan RPM');
+            var fanInfo = '{{ fan_pwm_pct }}';
+            if(fanInfo){
+                var aDict = JSON.parse(fanInfo);
+                var $dropdown = $("#fan-pwm-opt");
+                Object.entries(aDict).forEach(([key, value]) => {
+                    //console.log(key, val);
+                    $dropdown.append($("<option />").val(Math.round(value)).text(key));
+                    if(!$('#fan-pwm-input').val()){
+                        $('#fan-pwm-input').val(Math.round(value));
+                        $('#fan-pwm-input').attr("fan-id",key);
+                    }
+                });
+                $dropdown.show();
+            }
+            
+        </script>
+        <div class="w3-display-bottommiddle">
+            <span class="w3-text-grey">{{ __version__ }}</span>
+        </div>
+        {% endblock %}
+    </body>
+</html>

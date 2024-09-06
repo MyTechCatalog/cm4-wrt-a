@@ -18,12 +18,23 @@ uint64_t buttonUpTime = 0;
 
 extern bool is_host_shutdown_request_pending;
 extern bool is_host_hard_reset_request_pending;
+bool is_cm4_graceful_shutdown = false;
 
 void pkt_shutdown(struct pkt_buf *b){
-    // The Pico does not do anything with this request from the host.    
+    is_cm4_graceful_shutdown = true;
 }
 
 void reset_the_cm4() {
+    // In case the power rails were off due to a previous graceful shutdown:
+    // Turn on LED power rail (LED_V+) 
+    gpio_put(LED_PWR_GPIO, 1);
+
+    // Turn on the PCIe switch
+    gpio_put(PCIE_SWITCH_PWR_EN_GPIO, 1);
+
+    // Turn on the M.2 Sockets and Ethernet1
+    gpio_put(M2_PWR_EN_GPIO, 1);
+
     uint saved_pin_dir = gpio_get_dir(CM4_RUN_GPIO);
     gpio_set_dir(CM4_RUN_GPIO, GPIO_OUT);
     gpio_put(CM4_RUN_GPIO, 0);
@@ -56,7 +67,10 @@ void detect_shutdown_events(uint32_t events){
         // Get time of rising edge
         buttonUpTime = get_time();
         uint64_t diff = buttonUpTime - buttonDownTime;
-        if ((buttonUpTime > buttonDownTime) && 
+        if (!gpio_get(CM4_RST_GPIO)) {
+             // The CM4 is off. Turn it on.
+            reset_the_cm4();
+        } else if ((buttonUpTime > buttonDownTime) && 
             (diff >= GRACEFUL_SHUTDOWN_MIN_THRESH_uSEC) &&
             (diff < HARD_RESET_MIN_THRESH_uSEC)) {
                 is_host_shutdown_request_pending = true;
@@ -64,5 +78,30 @@ void detect_shutdown_events(uint32_t events){
             (diff >= HARD_RESET_MIN_THRESH_uSEC)) {
             is_host_hard_reset_request_pending = true;
         }
+    }
+}
+
+void handle_cm4_events(uint32_t events){
+    // This function is called by an interrupt service routing
+    // Do not do anything that holds up the processor, like
+    // print statements, blocking I/O etc.
+    if (events & GPIO_IRQ_EDGE_FALL) {
+        if (is_cm4_graceful_shutdown) {
+            // Turn OFF(1) Pico LED1
+            //gpio_put(LED_PIN1_GPIO, 1);
+
+            // Turn off LED power rail (LED_V+) 
+            gpio_put(LED_PWR_GPIO, 0);
+
+            // Turn off the PCIe switch
+            gpio_put(PCIE_SWITCH_PWR_EN_GPIO, 0);
+
+            // Turn off the M.2 Sockets and Ethernet1
+            gpio_put(M2_PWR_EN_GPIO, 0);
+        }
+    } else if (events & GPIO_IRQ_EDGE_RISE) {
+        is_cm4_graceful_shutdown = false;
+        // Turn ON(0) Pico LED1
+        //gpio_put(LED_PIN1_GPIO, 0);
     }
 }

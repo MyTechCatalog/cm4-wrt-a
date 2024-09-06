@@ -6,7 +6,7 @@ The repository is organized as follows:
 
 | Directory   | Description                                                                                       |
 | ------------|---------------------------------------------------------------------------------------------------|
-| [CM4](CM4)  | Source code for picod: An OpenWrt service for communicating with the Raspberry Pi Pico            |
+| [CM4](CM4)  | Source code for picod: A service for communicating with the Raspberry Pi Pico            |
 | [pico](pico)| Firmware for the Raspberry Pi Pico microcontroller                                                |
 | [case](case)| STL files for a 3D printed case for the CM4-WRT-A                                                 |
 
@@ -33,11 +33,39 @@ sudo usermod -aG docker $USER
     ```
 2. Run the OpenWrt build script: 
     ```shell
-    cd cm4-wrt-a && ./build-openwrt.sh v22.03.4
+    cd cm4-wrt-a && ./build-openwrt.sh v23.05.4
     ```
 3. The OpenWrt images will be located in this folder: ```cm4-wrt-a/bin/targets/bcm27xx/bcm2711/```
 
-You can omit the OpenWrt release version in step 2 above (<b>v22.03.4</b>), and the script will use the latest tag from the OpenWrt repo.
+You can omit the OpenWrt release version in step 2 above (<b>v23.05.4</b>), and the script will use the latest tag from the OpenWrt repo.
+
+## Building the picod service for Raspbian or Debian variants ##
+### Cross-compiling with Docker
+Assuming you have Docker installed as described in the [prerequisites](https://github.com/MyTechCatalog/cm4-wrt-a#install-prerequisites) above, run the commands below:
+
+```shell
+cd CM4
+make docker-cross
+./build-picod.sh
+```
+The debian package <b>picod_1.0_arm64.deb</b> will be located in `CM4/build` folder.
+Copy it to the Raspberry Pi and install it with this command:
+```shell
+dpkg -i picod_1.0_arm64.deb
+```
+### Starting the picod service (on Raspbian)
+```shell
+sudo systemctl daemon-reload
+sudo systemctl enable picod.service
+sudo systemctl start picod.service
+```
+You can then access the `picod` web interface at <b>http://localhost:8086/</b>. This location is not accessible from outside the RPi CM4 itself. As such, an SSH tunnel can be created with the following command to forward port 8086 to <b>localhost</b> on your computer:
+```shell
+ssh -L 8086:localhost:8086 username@cm4_ip_address
+```
+### Update config.txt
+Copy to `CM4/config_rpios.txt` to `/boot/firmware/config.txt` in order to configure/enable the custom interfaces on the board.
+
 ## Compiling the Raspberry Pi Pico firmware ##
 1. Clone this repository if you haven't already done so from above: 
     ```shell
@@ -52,8 +80,4 @@ You can omit the OpenWrt release version in step 2 above (<b>v22.03.4</b>), and 
 ## Contact information
 Email: cm4-wrt-a@mytechcatalog.com
 
-## Donations
-Did this project help you? Consider making a donation:
-
-[![paypal](https://raw.githubusercontent.com/java-decompiler/jd-gui/master/src/website/img/btn_donate_usd.gif)](https://www.paypal.com/donate/?hosted_button_id=N33ZHPURT53JJ)
 

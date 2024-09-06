@@ -213,10 +213,9 @@ static inline void pico_pkt_temperature_resp_unpack(const uint8_t *buf,
 // Host (CM4) function definitions
 #ifndef PICO_BOARD
 /// @brief Sends a board temperature request to the RPi Pico
-/// @param fd Pico serial file descriptor
 /// @param tmp [out] board temperatures
 /// @return True(1) on success. False(0) on failure
-bool send_temperature_request(int fd, pico_pkt_temperature_u & tmp);
+bool send_temperature_request(pico_pkt_temperature_u & tmp);
 #endif
 
 #ifdef __cplusplus

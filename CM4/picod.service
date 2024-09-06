@@ -1,0 +1,20 @@
+# Script for starting the Raspberry Pi Pico Monitoring Service
+# Copy this file to /etc/systemd/system/picod.service 
+# to automatically start the picod
+
+[Unit]
+Description=Raspberry Pi Pico Monitoring Service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+
+User=root
+ExecStart=/usr/bin/picod -c /etc/picod/picod.conf
+ExecStop=/bin/pkill -SIGTERM picod
+
+[Install]
+WantedBy=multi-user.target

@@ -5,3 +5,6 @@ Dockerfile
 influxdb
 PicoDockerfile
 OpenWrtDockerfile
+CM4/debian/files
+CM4/debian/debhelper-build-stamp
+CM4/debian/picod.substvars

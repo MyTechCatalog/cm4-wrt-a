@@ -72,6 +72,8 @@ static inline void blink_led(uint gpio, uint numTimes) {
 void gpio_isr_callback(uint gpio, uint32_t events) {
     if (gpio == SHUTDOWN_REQUEST_GPIO) {
         detect_shutdown_events(events);
+    } else if (gpio == CM4_RST_GPIO) {
+        handle_cm4_events(events);
     } else {
         update_tachometer_counter(gpio, events);
     }
@@ -181,11 +183,15 @@ static inline void init_board() {
     gpio_put(M2_PWR_EN_GPIO, 1);
 
     is_CM4_in_USB_Boot_mode = is_CM4_USB_boot_mode_enabled();
-    
-    // Turn on the Raspberry Pi Compute Module 4 (CM4)
+        
     if (is_CM4_in_USB_Boot_mode) {
         gpio_put(CM4_BOOT_GPIO, 0);
-    } else {
+    } else {        
+        // Setup interrupt handler detect when the CM4 is up and running.
+        gpio_set_irq_enabled_with_callback(CM4_RST_GPIO, 
+            GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_isr_callback);
+
+        // Turn on the Raspberry Pi Compute Module 4 (CM4)
         gpio_put(CM4_BOOT_GPIO, 1);
 
         gpio_pull_up(SHUTDOWN_REQUEST_GPIO);

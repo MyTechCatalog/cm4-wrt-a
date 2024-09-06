@@ -13,13 +13,13 @@
 // Watchdog timeout for CM4. 
 static uint16_t cm4_watchdog_timeout_sec = 30;
 // Flag indicating whether the CM4 watchdog is enabled (true) 
-static bool is_cm4_watchdog_enabled = false;
+static volatile bool is_cm4_watchdog_enabled = false;
 extern bool is_host_shutdown_request_pending;
 static uint16_t max_retries = 0;
 static struct repeating_timer cm4_watchdog_timer;
 // System time when the last message from the host was received
 uint64_t lastHostMessageTime = 0;
-pico_pkt_watchdog_t s = {0};
+static pico_pkt_watchdog_t s = {0};
 
 void update_watchdog() {
     lastHostMessageTime = get_time();
@@ -73,19 +73,28 @@ void pkt_watchdog(struct pkt_buf *b){
 
     if (s.enable) {
         if (s.write && !is_cm4_watchdog_enabled) {
-            uint32_t timout_ms = 100;
+            uint32_t timout_ms = 100;            
             // Start the timer          
-            s.success = add_repeating_timer_ms(timout_ms, 
+            is_cm4_watchdog_enabled = add_repeating_timer_ms(timout_ms, 
                 cm4_watchdog_timer_callback, NULL, &cm4_watchdog_timer);
-            is_cm4_watchdog_enabled = s.success;
+            s.success = is_cm4_watchdog_enabled;
+            /*if (is_cm4_watchdog_enabled) {
+                // Turn ON(0) Pico LED1
+                gpio_put(LED_PIN1_GPIO, 0);
+            }*/
         }      
     } else {
         if (s.write && is_cm4_watchdog_enabled) {            
-            s.success = cancel_repeating_timer(&cm4_watchdog_timer);            
+            s.success = cancel_repeating_timer(&cm4_watchdog_timer);
+            if (s.success) {
+                is_cm4_watchdog_enabled = false;                
+                // Turn OFF(1) Pico LED1
+                //gpio_put(LED_PIN1_GPIO, 1);
+            }
         }
-        is_cm4_watchdog_enabled = false;
-        s.enable = is_cm4_watchdog_enabled;
     }
+
+    s.enable = is_cm4_watchdog_enabled;
         
     // Pack the Watchdog response message
     pico_pkt_watchdog_resp_pack(b->resp, &s);

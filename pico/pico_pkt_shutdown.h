@@ -83,11 +83,16 @@ void pkt_shutdown(struct pkt_buf *b);
 
 // Called upon detection of the graceful shutdown button press
 void send_shutdown_request();
+
 // Called upon detection of along press of the shutdown button.
 // It resets the CM4 by asserting the appropriate pin
 void reset_the_cm4();
+
 // Called by GPIO ISR to detect shutdown requests
 void detect_shutdown_events(uint32_t events);
+
+// Called by GPIO ISR to detect CM4 power good and CPU running.
+void handle_cm4_events(uint32_t events);
 
 /* Pack the request buffer */
 /// @brief Packs Watchdog timeout read/write request

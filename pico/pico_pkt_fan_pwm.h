@@ -149,8 +149,10 @@ typedef struct pico_pkt_fan_pwm_t {
 void pkt_fan_pwm(struct pkt_buf *b);
 uint16_t get_fan_rpm(uint8_t fan_id);
 
-#ifdef PICO_BOARD
 void init_fan_pwm();
+void turn_off_fan_pwm();
+
+#ifdef PICO_BOARD
 // Called by GPIO ISR to update tachometer counter(s)
 void update_tachometer_counter(uint gpio, uint32_t events);
 #endif
@@ -267,18 +269,16 @@ static inline void pico_pkt_fan_pwm_unpack(const uint8_t *buf,
 // Host (CM4) function definitions
 #ifndef PICO_BOARD
 /// @brief Helper function to send default/startup PWM FAN settings.
-/// @param fd Pico serial file descriptor
-void init_fan_pwm(int fd);
+void init_fan_pwm();
 
 /// @brief Helper function to return RPi Pico PWM FAN ID given its name.
-uint8_t get_fan_id_from_name(char * fan_name);
+uint8_t get_fan_id_from_name(const char * fan_name);
 
 /// @brief Sends a request to the Pico to read/write FAN PWM setting
-/// @param fd Pico serial file descriptor
 /// @param rw_flag Read(0)/Write(1) flag
 /// @param fanInfo Fan info.
 /// @return True(1) on success. False(0) on failure.
-bool send_fan_pwm_request(int fd, bool rw_flag, std::vector<struct pico_pkt_fan_pwm_t> &fanInfo);
+bool send_fan_pwm_request(bool rw_flag, std::vector<struct pico_pkt_fan_pwm_t> &fanInfo);
 #endif
 
 #ifdef __cplusplus

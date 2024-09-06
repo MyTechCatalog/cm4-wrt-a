@@ -1,0 +1,12 @@
+Source: picod  
+Maintainer: MyTechCatalog LLC <kasaija@mytechcatalog.com>
+Build-Depends: debhelper-compat (= 11)
+Standards-Version: 3.9.3
+Section: utils
+Homepage: https://github.com/MyTechCatalog/cm4-wrt-a
+Vcs-Git: https://github.com/MyTechCatalog/cm4-wrt-a.git
+
+Package: picod  
+Priority: extra  
+Architecture: arm64
+Description: Raspberry Pi Pico Monitoring Service for CM4-WRT-A board.

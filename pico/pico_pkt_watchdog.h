@@ -130,7 +130,7 @@ void update_watchdog();
 /// @param buf Pointer to request buffer
 /// @param p request details
 static inline void pico_pkt_watchdog_req_pack(uint8_t *buf, 
-    pico_pkt_watchdog_t *p) {    
+    pico_pkt_watchdog_t *p) {
     if (p == NULL) {
         return;
     }
@@ -202,7 +202,7 @@ static inline void pico_pkt_watchdog_unpack(const uint8_t *buf,
     UNPACK_WATCHDOG_U16(p->timeout, PICO_PKT_WATCHDOG_IDX_TIMEOUT)
     UNPACK_WATCHDOG_U16(p->max_retries, PICO_PKT_WATCHDOG_IDX_RETRIES)
 
-    p->enable = ((buf[PICO_PKT_WATCHDOG_IDX_FLAGS] & PICO_PKT_WATCHDOG_ENABLE) != 0);    
+    p->enable = ((buf[PICO_PKT_WATCHDOG_IDX_FLAGS] & PICO_PKT_WATCHDOG_ENABLE) != 0);
     
     if ((buf[PICO_PKT_WATCHDOG_IDX_FLAGS] & PICO_PKT_WATCHDOG_FLAG_SUCCESS) != 0) {
         p->success = true;
@@ -213,14 +213,12 @@ static inline void pico_pkt_watchdog_unpack(const uint8_t *buf,
 
 #ifndef PICO_BOARD
 /// @brief Helper function to send default/startup watchdog settings.
-/// @param fd Pico serial file descriptor
-void init_watchdog(int fd);
+void init_watchdog();
 
 /// @brief Sends watchdog read/write requests to the RPi Pico
-/// @param fd Pico serial file descriptor
 /// @param s [In/Out] Watchdog request data
 /// @return True(1) on success. False(0) on failure.
-bool send_watchdog_request(int fd, pico_pkt_watchdog_t & s);
+bool send_watchdog_request(pico_pkt_watchdog_t & s);
 #endif
 
 #ifdef __cplusplus

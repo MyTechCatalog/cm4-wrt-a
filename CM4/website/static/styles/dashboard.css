@@ -1,0 +1,83 @@
+.main-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-rows: 1fr;
+    grid-template-columns: repeat(7, 1fr) minmax(240px, 1fr);
+}
+
+.plot-panel {
+    grid-row: 1 / span auto;
+    grid-column: 1 / span 7;    
+}
+
+.plot-grid {
+    display: grid;
+    row-gap: 0.1rem;
+    grid-template-rows: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+    height: 90vh;
+    width: 100%;
+}
+
+.control-panel {
+    grid-row: 1 / span auto;
+    grid-column: 8;
+}
+
+.filler {
+    height: 100%;
+    width: 100%;
+}
+
+.main-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    height: 100%;
+    width: 100%;
+    border-radius: 4px;
+    transition: all 500ms;
+    overflow: hidden;
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.main-border {
+    border: 2px solid #585858;
+}
+
+.panel-wide-x3 {
+    grid-column: span 3 / auto;
+}
+.panel-wide-x4 {
+    grid-column: span 4 / auto;
+}
+
+.wide-panel {
+    width: 100%;
+}
+
+.fan-pwm-panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.fan-pwm-edit-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    /*align-items: center;*/
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.dark {    
+    background: #353535;
+    color: #fff;
+    box-shadow: rgba(3, 8, 20, 0.1) 0px 0.15rem 0.5rem, rgba(2, 8, 20, 0.1) 0px 0.075rem 0.175rem;    
+}
