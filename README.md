@@ -11,11 +11,9 @@ The repository is organized as follows:
 | [case](case)| STL files for a 3D printed case for the CM4-WRT-A                                                 |
 
 # Documentation
-Overview of the CM4-WRT-A: https://www.mytechcatalog.com/CM4-WRT-A-Raspberry-Pi-CM4-Router-Baseboard-With-NVME-Support
-
-How to install OpenWRT on the CM4-WRT-A router: https://www.mytechcatalog.com/how-to-install-openwrt-on-the-cm4-wrt-a-router
-
-How to monitor the CM4-WRT-A board temperatures and fan speed (RPM) in InfluxDB: https://www.mytechcatalog.com/how-to-monitor-the-cm4-wrt-a-board-temperatures-and-fan-speed-in-influxdb
+* [Overview of the CM4-WRT-A](https://www.mytechcatalog.com/CM4-WRT-A-Raspberry-Pi-CM4-Router-Baseboard-With-NVME-Support)
+* [How to install OpenWRT on the CM4-WRT-A router](https://www.mytechcatalog.com/how-to-install-openwrt-on-the-cm4-wrt-a-router)
+* [How to monitor the CM4-WRT-A board temperatures and fan speed (RPM) in InfluxDB](https://www.mytechcatalog.com/how-to-monitor-the-cm4-wrt-a-board-temperatures-and-fan-speed-in-influxdb)
 
 [![Complimentary Video](https://img.youtube.com/vi/28v230jvPTA/maxresdefault.jpg)](https://www.youtube.com/watch?v=28v230jvPTA)
 
