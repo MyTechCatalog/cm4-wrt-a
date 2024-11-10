@@ -24,6 +24,8 @@ add_compile_options(-Wall
 add_compile_definitions(GIT_VERSION_STR_POSTFIX="-${GITVER}")
 message( STATUS "GIT_VERSION_STR_POSTFIX: ${GITVER}" )
 
+add_compile_definitions(PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64)
+
 add_executable(cm4-wrt-a
         cm4-wrt-a.c
         pico_pkt_ping.c
