@@ -23,5 +23,6 @@
 #include <poll.h>
 #include <sys/prctl.h>
 #include <sys/syslog.h>
+#include <sys/file.h>
 
 #endif

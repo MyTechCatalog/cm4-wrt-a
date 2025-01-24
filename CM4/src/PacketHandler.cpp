@@ -53,6 +53,23 @@ int PacketHandler::run(){
         goto cleanup; 
     }
 
+    // Put the serial port into exclusive mode.
+    result = ioctl(pico_fd_, TIOCEXCL);
+    if (result == -1) {
+        print_err("Failed to put the serial port %s into exclusive mode: %s\n",
+            appSettings.pico_serial_device_path.c_str(), strerror(errno));
+        retVal  = EXIT_FAILURE;
+        goto cleanup;
+    }
+
+    // Try and place an exclusive advisory lock on the open device
+    result = flock(pico_fd_, LOCK_EX | LOCK_NB);
+    if (result == EWOULDBLOCK) {
+        print_err("Another process has already opened serial port %s\n", appSettings.pico_serial_device_path.c_str());
+        retVal  = EXIT_FAILURE; 
+        goto cleanup;
+    }
+
     struct termios settings;    
     get_serial_port_settings(settings);
     
