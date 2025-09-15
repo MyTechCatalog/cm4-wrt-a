@@ -5,6 +5,7 @@
  */
 #ifndef PACKET_HANDLER_HPP
 #define PACKET_HANDLER_HPP
+#include <sys/types.h>
 #include "ConcurrentQueue.hpp"
 #include "pkt_handler.h"
 #include "Event.hpp"

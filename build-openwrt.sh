@@ -20,7 +20,7 @@ dockerFile=${basePath}/OpenWrtDockerfile
 [ ! -d "${basePath}/bin" ] && { mkdir "${basePath}/bin"; }
 
 theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
-[ -z ${theId} ] && { printf "#This file is auto-generated.\nFROM debian:stable-slim\n\n" > ${dockerFile}; } &&\
+[ -z ${theId} ] && { printf "#This file is auto-generated.\nFROM debian:bookworm-slim\n\n" > ${dockerFile}; } &&\
 { printf "RUN useradd build -u $(id -u) -m -c 'OpenWrt Builder'\n" >> ${dockerFile}; } &&\
 { printf "RUN apt-get update\n" >> ${dockerFile}; } &&\
 { printf "RUN apt install -y build-essential clang \\" >> ${dockerFile}; } &&\
