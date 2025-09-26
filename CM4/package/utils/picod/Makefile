@@ -24,7 +24,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/picod
 	SECTION:=base
 	CATEGORY:=Utilities
-	DEPENDS:=+libstdcpp +libcurl +libubox +libubus +libconfig +libpthread
+	DEPENDS:=+libstdcpp +libubox +libubus +libconfig +libpthread
 	TITLE:=Raspberry Pi Pico monitoring daemon
 endef
 

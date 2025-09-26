@@ -31,7 +31,9 @@ theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
 { printf "RUN mkdir ~/openwrt ~/picod\n" >> ${dockerFile}; } &&\
 { printf "WORKDIR /home/build/openwrt\n" >> ${dockerFile}; } &&\
 { printf "RUN git clone -b ${branch} ${git_url} .\n" >> ${dockerFile}; } &&\
-{ printf "RUN make distclean && ./scripts/feeds update -a && ./scripts/feeds install -a\n" >> ${dockerFile}; } &&\
+{ printf "RUN make distclean \n" >> ${dockerFile}; } &&\
+{ printf "RUN ./scripts/feeds update -a\n" >> ${dockerFile}; } &&\
+{ printf "RUN ./scripts/feeds install -a\n" >> ${dockerFile}; } &&\
 { printf "RUN echo '/home/build/CM4/create_picod_links.sh' > ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
 { printf "RUN echo 'cp -r /home/build/CM4/package /home/build/openwrt/' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
 { printf "RUN echo 'cp /home/build/CM4/diffconfig /home/build/openwrt/.config' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
