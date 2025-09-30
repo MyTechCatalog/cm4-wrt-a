@@ -19,6 +19,8 @@ dockerFile=${basePath}/OpenWrtDockerfile
 
 [ ! -d "${basePath}/bin" ] && { mkdir "${basePath}/bin"; }
 
+cfgUrl="https://downloads.openwrt.org/releases/${branch#v*}/targets/bcm27xx/bcm2711/config.buildinfo"
+
 theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
 [ -z ${theId} ] && { printf "#This file is auto-generated.\nFROM debian:bookworm-slim\n\n" > ${dockerFile}; } &&\
 { printf "RUN useradd build -u $(id -u) -m -c 'OpenWrt Builder'\n" >> ${dockerFile}; } &&\
@@ -36,7 +38,8 @@ theId=`docker ps -aqf "name=^${CONTAINER_NAME}$"`;
 { printf "RUN ./scripts/feeds install -a\n" >> ${dockerFile}; } &&\
 { printf "RUN echo '/home/build/CM4/create_picod_links.sh' > ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
 { printf "RUN echo 'cp -r /home/build/CM4/package /home/build/openwrt/' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
-{ printf "RUN echo 'cp /home/build/CM4/diffconfig /home/build/openwrt/.config' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
+{ printf "RUN wget --output-document=/home/build/openwrt/.config ${cfgUrl}\n" >> ${dockerFile}; } &&\
+{ printf "RUN echo 'cat /home/build/CM4/diffconfig >> /home/build/openwrt/.config' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
 { printf "RUN echo 'make defconfig && make tools/install -j\$(nproc) && make toolchain/install -j\$(nproc)' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
 { printf "RUN echo 'cp /home/build/CM4/config.txt ./target/linux/bcm27xx/image/config.txt' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\
 { printf "RUN echo 'make -j\$(nproc) defconfig download clean world' >> ~/build-openwrt.sh\n" >> ${dockerFile}; } &&\

@@ -112,7 +112,7 @@ int init_pico() {
         init_fan_pwm();
         init_watchdog();
     } else {
-        fmt::println(stderr ,"Init timed out.");
+        fmt::println(stderr ,"Initialization timed out.");
         retVal  = EXIT_FAILURE;
     }
 

@@ -105,9 +105,11 @@ int parse_config_file(const char * file_path)
     GET_STRING_SETTING("webroot_path", appSettings.webroot_path)
     GET_BOOLEAN_SETTING("enable_web_interface", appSettings.enable_web_interface)
 
+#ifdef NO_UBUS
     if (!fs::is_directory(appSettings.webroot_path)) {
         fmt::println(stderr, "Error, webroot directory not found: {}", appSettings.webroot_path);
     }    
+#endif
 
     { // Parse the InfluxDB sensor IDs
         config_setting_t *setting = config_lookup(&config, "sensor_names");
