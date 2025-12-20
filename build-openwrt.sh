@@ -5,7 +5,7 @@
 # CM4-WRT-A baseboard: 
 # https://www.tindie.com/products/mytechcatalog/rpi-cm4-router-baseboard-with-nvme/
 ################################################################################
-git_url="https://git.openwrt.org/openwrt/openwrt.git"
+git_url="https://github.com/openwrt/openwrt"
 [ "x$1" == "x" ] && { branch=$(git ls-remote --tags ${git_url} 'refs/tags/v*' |\
 grep '[^\{\}]$' | tail -n 1 | awk '{print $2}' | cut -d'/' -f3); } ||\
 { branch="$1"; }
