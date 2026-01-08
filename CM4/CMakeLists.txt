@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.5)
 
 # Default to CMAKE_BUILD_TYPE = Release unless overridden on command line
 # http://www.cmake.org/pipermail/cmake/2008-September/023808.html
